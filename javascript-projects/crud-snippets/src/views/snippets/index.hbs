@@ -1,0 +1,23 @@
+<h3>Home</h3>
+  <table class="table">
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col">User</th>
+        <th scope="col">Title</th>
+        <th scope="col">Created</th>
+        <th scope="col">Link</th>
+      </tr>
+    </thead >
+    <tbody>
+      {{#each users}}
+        {{#each snippets}}
+        <tr>
+          <th>{{../username}}</th>
+          <th>{{title}}</th>
+          <th>{{created_at}}</th>
+          <th><a href="./snippets/view/{{_id}}">Code</a></th>
+        </tr>
+        {{/each}}
+      {{/each}}
+    </tbody>
+  </table>

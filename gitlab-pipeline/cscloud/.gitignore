@@ -1,0 +1,6 @@
+/inventory/inventory
+/.vault
+/roles/runner/vars/main.yml
+*.tfstate
+*/**/*.tfstate
+/environment/terraform.tfvars

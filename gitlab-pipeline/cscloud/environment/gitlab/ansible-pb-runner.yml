@@ -1,0 +1,12 @@
+---
+- hosts: gitlab_runner
+  become: yes
+  become_user: root
+  become_method: sudo
+  roles:
+    - role: common
+    - role: terraform
+    - role: docker
+    - role: runner
+    - role: newman
+    - role: jmeter

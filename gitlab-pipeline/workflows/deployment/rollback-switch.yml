@@ -1,0 +1,52 @@
+deploy_rollback:
+  tags:
+    - $SHELL_RUNNER
+  stage: deployment
+  variables:
+    PRODUCTION_FILE: /home/gitlab-runner/dokuwiki/production_env.env
+  script:
+    - cd ${DEPLOYMENT_INFRA}
+    - chmod 700 switch-blue-and-green.sh
+    - cp ${PRODUCTION_FILE} .
+    - >
+      if [ "$(cat production_env.env)" == "${BLUE_ENV}" ]; then
+        eval $(ssh-agent)
+        bash switch-blue-and-green.sh $(cat green_ip_build.env) $(cat blue_ip_build.env) $(cat kube_master_ip.env) $(cat lb_ip.env) $(cat production_env.env) ${NAME} ${APP} ${ROLEBACK_VERSION}
+        echo "${GREEN_ENV}" > ${PRODUCTION_FILE}
+      else
+        eval $(ssh-agent)
+        bash switch-blue-and-green.sh $(cat green_ip_build.env) $(cat blue_ip_build.env) $(cat kube_master_ip.env) $(cat lb_ip.env) $(cat production_env.env) ${NAME} ${APP} ${ROLEBACK_VERSION}
+        echo "${BLUE_ENV}" > ${PRODUCTION_FILE}
+      fi
+  rules:
+    - if: '$FIRST_RELEASE == "false" && $ROLEBACK == "true"'
+      when: on_success
+
+test_rollback_deployment:
+  stage: deployment
+  tags:
+    - $SHELL_RUNNER
+  variables:
+    REPORT_FILE: api-production-test-report.xml
+  script:
+    - cp ${TEST_DIR}/api/2dv611-CI-CD.postman_collection.json ${DEPLOYMENT_INFRA}
+    - cd ${DEPLOYMENT_INFRA}
+    - >
+      newman run 2dv611-CI-CD.postman_collection.json
+      --global-var "DOMAIN=${PRODUCTION_DOMAIN}"
+      --global-var "APP_NAME=${APP_NAME}"
+      --global-var "VERSION=${ROLEBACK_VERSION}"
+      --reporters cli,junit
+      --reporter-junit-export ${REPORT_FILE}
+    - cp ${REPORT_FILE} ../../../${TEST_DIR}/api
+  needs:
+    - job: deploy_rollback
+  artifacts:
+    when: always
+    paths: 
+      - ./${TEST_DIR}/api/${REPORT_FILE}
+    reports:
+      junit: ./${TEST_DIR}/api/${REPORT_FILE}
+  rules:
+    - if: '$FIRST_RELEASE == "false" && $ROLEBACK == "true"'
+      when: on_success

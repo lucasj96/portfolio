@@ -1,0 +1,19 @@
+#wrapper {
+  margin: auto;
+  width: 600px;
+}
+
+.issue {
+  border: solid 1px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: rgb(195, 225, 252);
+}
+
+.avatar {
+  max-width: 25px;
+}
+
+.closebutton, .openbutton {
+}

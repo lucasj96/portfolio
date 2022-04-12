@@ -1,0 +1,19 @@
+<h3>My snippets</h3>
+  <table class="table">
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col">Title</th>
+        <th scope="col">Created</th>
+        <th scope="col">Link</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each snippets}}
+        <tr>
+          <th>{{title}}</th>
+          <th>{{created_at}}</th>
+          <th><a href="./snippets/view/{{_id}}">Code</a></th>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>

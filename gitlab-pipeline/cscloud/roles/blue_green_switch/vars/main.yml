@@ -1,0 +1,18 @@
+dokuwiki_blue_kube_dir: /dokuwiki_blue
+dokuwiki_green_kube_dir: /dokuwiki_green
+dokuwiki_blue_nfs_dir: /dokuwiki_blue
+dokuwiki_green_nfs_dir: /dokuwiki_green
+dokuwiki_production_dir: /dokuwiki_production
+dokuwiki_production_dir_backup: /dokuwiki_production_backup
+dokuwiki_staging_dir: /dokuwiki_staging
+data_owner: www-data
+data_mode: 0777
+switch_data_mode: 0777
+green_app_ip_address: "{{ green_app_ip_address }}"
+blue_app_ip_address: "{{ blue_app_ip_address }}"
+lb_ip_address: "{{ lb_ip_address }}"
+kube_master_ip_address: "{{ kube_master_ip_address }}"
+production_env: "{{ production_env }}"
+name: "{{ name }}"
+app: "{{ app }}"
+app_version: "{{ app_version }}"

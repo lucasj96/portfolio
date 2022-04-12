@@ -1,0 +1,20 @@
+capacity_test_easy:
+  stage: capacity
+  tags:
+    - $SHELL_RUNNER
+  variables:
+     TEST_FILE: loadtest_easy.jmx # Choose between easy/medium/hard/extreme.
+     REPORT_FILE: result_easy.csv
+  script:
+    - cp ${TEST_DIR}/capacity/${TEST_FILE} ${DEPLOYMENT_INFRA}/
+    - cd ${DEPLOYMENT_INFRA}
+    - sed -i 's+ci_username+'"${NAME}"'+g' ${TEST_FILE} 
+    - sed -i 's+ci_result_filename+'"${REPORT_FILE}"'+g' ${TEST_FILE}
+    - bash /home/gitlab-runner/capacity_test/apache-jmeter-5.4.3/bin/jmeter.sh -n -t ${TEST_FILE}
+  artifacts:
+    when: always
+    paths: 
+      - ${DEPLOYMENT_INFRA}/${REPORT_FILE}
+  rules:
+    - if: '$ROLEBACK == "false"'
+      when: on_success

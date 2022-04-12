@@ -1,0 +1,4 @@
+dokuwiki_blue_nfs_dir: /dokuwiki_blue
+dokuwiki_blue_dir: dokuwiki_blue
+app: "{{ app }}"
+app_version: "{{ app_version }}"

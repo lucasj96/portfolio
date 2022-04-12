@@ -1,0 +1,87 @@
+- name: Creating mountable shared folder for blue env
+  file:
+    path: "{{ dokuwiki_blue_nfs_dir }}"
+    group: www-data
+    owner: www-data
+    mode: 0777
+    recurse: yes
+    state: directory
+
+- name: Creating mountable shared folder for green env
+  file:
+    path: "{{ dokuwiki_green_nfs_dir }}"
+    group: www-data
+    owner: www-data
+    mode: 0777
+    recurse: yes
+    state: directory
+
+- name: Copy and unzip dokuwiki data dir {{ dokuwiki_blue_nfs_dir }}
+  unarchive:
+    dest: "{{ dokuwiki_blue_nfs_dir }}"
+    src: data.tar.gz
+    group: www-data
+    owner: www-data
+    mode: 0777
+
+- name: Copy and unzip dokuwiki data to dir {{ dokuwiki_green_nfs_dir }}
+  unarchive:
+    dest: "{{ dokuwiki_green_nfs_dir }}"
+    src: data.tar.gz
+    group: www-data
+    owner: www-data
+    mode: 0777
+
+- name: Copy and unzip dokuwiki conf dir {{ dokuwiki_blue_nfs_dir }}
+  unarchive:
+    dest: "{{ dokuwiki_blue_nfs_dir }}"
+    src: conf.tar.gz
+    group: www-data
+    owner: www-data
+    mode: 0777
+
+- name: Copy and unzip dokuwiki conf to dir {{ dokuwiki_green_nfs_dir }}
+  unarchive:
+    dest: "{{ dokuwiki_green_nfs_dir }}"
+    src: conf.tar.gz
+    group: www-data
+    owner: www-data
+    mode: 0777
+
+- name: Install nfs package
+  apt:
+    name: nfs-kernel-server
+    update_cache: yes
+    cache_valid_time: 3600
+    state: present
+
+- name: Starting nfs server
+  systemd:
+    name: nfs-server
+    state: started
+    enabled: yes
+
+- name: Configure nfs server
+  template:
+    src: export_file.j2
+    dest: /etc/exports
+  notify:
+    - Restart nfs
+
+- name: Change mode dir {{ dokuwiki_blue_nfs_dir }}
+  file:
+    path: "{{ dokuwiki_blue_nfs_dir }}"
+    mode: 0777
+    owner: www-data
+    group: www-data
+    recurse: yes
+    state: directory
+
+- name: Change mode dir {{ dokuwiki_green_nfs_dir }}
+  file:
+    path: "{{ dokuwiki_green_nfs_dir }}"
+    mode: 0777
+    owner: www-data
+    group: www-data
+    recurse: yes
+    state: directory

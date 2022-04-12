@@ -1,0 +1,51 @@
+- name: Copying test folder 
+  copy: 
+    src: test
+    dest: /home/{{ user }}/capacity_test/
+    force: yes
+    group: "{{ user }}"
+    owner: "{{ user }}"
+    mode: 0644
+    directory_mode:
+
+- name: Installing unzip
+  apt:
+    name: unzip
+    state: present
+    update_cache: yes
+
+- name: Installing Java
+  apt:
+    name: openjdk-11-jre-headless
+    state: present
+    update_cache: yes
+
+- name: Download latest JMeter and unzip
+  shell:
+    chdir: /home/{{ user }}/capacity_test/
+    cmd: | 
+      wget https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.4.3.zip
+      unzip apache-jmeter-5.4.3.zip
+
+- name: Change own dir apache-jmeter-5.4.3
+  file:
+    path: /home/{{ user }}/capacity_test/apache-jmeter-5.4.3
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    recurse: yes
+    state: directory
+
+# - name:  Copy tests
+#   copy:
+#     src: test/req-start-page.jmx
+#     dest: /home/{{ user }}/capacity_test/apache-jmeter-5.4.3/bin/req-start-page.jmx
+#     mode: 0644
+
+# Otherwise jmeter will throw a permission error
+# - name: Change jmeter.log dir
+#   command: |
+#     sed -i \
+#     's+<File name="jmeter-log" fileName="${sys:jmeter.logfile:-jmeter.log}" append="false">+<File name="jmeter-log" \
+#     fileName="jmeter.log" \
+#     append="false">+g' \
+#     /home/gitlab-runner/capacity_test/apache-jmeter-5.4.3/bin/log4j2.xml

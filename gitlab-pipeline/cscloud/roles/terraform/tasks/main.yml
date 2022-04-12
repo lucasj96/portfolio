@@ -1,0 +1,19 @@
+- name: Add repo keys
+  apt_key:
+    url: "{{ item }}"
+    state: present
+  loop: "{{ keys_to_add }}"
+
+- name: Add repos
+  apt_repository:
+    repo: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop: "{{ repos_to_add }}"
+
+- name: Installing "{{ packages_to_install }}" packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop: "{{ packages_to_install }}"

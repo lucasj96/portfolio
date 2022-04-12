@@ -1,0 +1,52 @@
+stages:
+  - commit
+  - build
+#   - destroy
+  - pre_staging
+  - staging # Test_staging will fail unless the domain name is set up
+  - capacity # Capacity will fail unless the domain name is set up.
+  - deployment # Deployment will fail unless the domain name is set up.
+  - cleanup
+  - notification
+
+include:
+  - 'workflows/commit/unit_test.yml'
+  - 'workflows/build/build_app.yml'
+#  - 'workflows/destroy/destroy_deployment.yml'
+  - 'workflows/pre_staging/update_infra.yml'
+  - 'workflows/pre_staging/install_admin.yml'
+  - 'workflows/staging/deploy_staging.yml'
+  - 'workflows/staging/rollback_staging.yml'
+  - 'workflows/capacity/jmeter.yml'
+  - 'workflows/deployment/rollback-switch.yml'
+  - 'workflows/deployment/blue-green-switch.yml'
+  - 'workflows/post_deployment/post_deployment.yml'
+  - 'workflows/post_deployment/post_rollback.yml'
+  - 'workflows/notification/notification.yml'
+
+variables:
+  NAME: name
+  EMAIL: yy223xx@student.lnu.se 
+  USERNAME: yy223xx
+  SHELL_RUNNER: username shell
+  DOCKER_RUNNER: username docker
+  VERSION: $CI_COMMIT_SHORT_SHA
+  BUILD_ENV: cscloud/roles/doku_wiki/files/doku_wiki
+  DEPLOYMENT_INFRA: cscloud/environment/deployment
+  NAME_UNIT_TEST_IMAGE: unit-test-images
+  CI_REGISTRY: gitlab.lnu.se:5050
+  PROJECT: yy223xx/groupname
+  APP: dokuwiki
+  PRODUCTION_DOMAIN: yy223xx-dokuwiki.xyz 
+  STAGING_DOMAIN: yy223xx.username-dokuwiki.xyz
+  BLUE_PORT: 31111
+  GREEN_PORT: 31112
+  TEST_DIR: dokuwiki/_test
+  APP_NAME: Dokuwiki
+  BLUE_ENV: blue
+  GREEN_ENV: green
+  ROLEBACK: "false"
+  ROLEBACK_VERSION: "fefd9aa3" # Value from successful pipeline.
+  FAILURE_TAG: error
+  SUCCESS_TAG: success
+  FIRST_RELEASE: "false" # OBS! Value "true" will destroy and then redeploy application

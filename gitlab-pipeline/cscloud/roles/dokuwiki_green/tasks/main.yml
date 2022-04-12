@@ -1,0 +1,39 @@
+- name: Copying dokuwiki files
+  become: yes
+  become_user: ubuntu 
+  copy: 
+    src: "{{ dokuwiki_green_dir }}"
+    dest: "$HOME"
+    force: yes
+
+- name: Copy kubernetes template files
+  become: yes
+  become_user: ubuntu 
+  template: 
+    src: dokuwiki-green.yml.j2
+    dest: "$HOME/{{ dokuwiki_green_dir }}/dokuwiki-green.yml"
+
+# Missing file .docker: https://stackoverflow.com/questions/52489890/missing-docker-folder-on-ubuntu
+# Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ 
+- name: Create secret in green context
+  become: yes
+  become_user: ubuntu
+  shell:
+    cmd: |
+      docker login -u {{ username }} -p {{ access_token }} {{ ci_registry }} 
+      kubectl config use-context green
+      kubectl create secret generic regcred --from-file=.dockerconfigjson=/home/ubuntu/.docker/config.json --type=kubernetes.io/dockerconfigjson
+
+- name: Deploying green env
+  become: yes
+  become_user: ubuntu
+  shell: 
+    chdir: "$HOME/{{ dokuwiki_green_dir }}" 
+    cmd: |
+      kubectl label nodes green-app --overwrite env=green 
+      kubectl config use-context green
+      kubectl apply -f dokuwiki-green.yml
+
+- name: Wait 60 sec to make the pod spin up before install admin
+  pause:
+    seconds: 60

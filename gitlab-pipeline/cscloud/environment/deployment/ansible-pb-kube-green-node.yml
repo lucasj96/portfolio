@@ -1,0 +1,10 @@
+---
+- hosts: green_app
+  become: yes
+  become_user: root
+  become_method: sudo
+  roles:
+    - role: common
+    - role: docker
+    - role: kube_main
+    - role: kube_node

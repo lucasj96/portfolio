@@ -1,0 +1,23 @@
+post_production_success:
+  stage: cleanup
+  tags:
+    - $SHELL_RUNNER
+  script:
+    - docker login -u ${USERNAME} -p $(cat /home/gitlab-runner/.env) ${CI_REGISTRY}
+    - docker tag "${CI_REGISTRY}/${PROJECT}/${APP}_${VERSION}:${VERSION}" "${CI_REGISTRY}/${PROJECT}/${APP}_${VERSION}:${SUCCESS_TAG}"
+    - docker push --all-tags ${CI_REGISTRY}/${PROJECT}/${APP}_${VERSION}
+  rules:
+    - if: '$FIRST_RELEASE == "false" && $ROLEBACK == "false"'
+      when: on_success
+
+post_production_failure:
+  stage: cleanup
+  tags:
+    - $SHELL_RUNNER
+  script:
+    - docker login -u ${USERNAME} -p $(cat /home/gitlab-runner/.env) ${CI_REGISTRY}
+    - docker tag "${CI_REGISTRY}/${PROJECT}/${APP}_${VERSION}:${VERSION}" "${CI_REGISTRY}/${PROJECT}/${APP}_${VERSION}:${FAILURE_TAG}"
+    - docker push --all-tags ${CI_REGISTRY}/${PROJECT}/${APP}_${VERSION}
+  rules:
+    - if: '$FIRST_RELEASE == "false" && $ROLEBACK == "false"'
+      when: on_failure

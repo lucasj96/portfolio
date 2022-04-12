@@ -1,0 +1,30 @@
+#!/bin/bash
+# To activate your hooks, run command:
+# git config --local core.hooksPath hooks/lucas/
+
+NAME=lucas
+ID=CSCloud account name
+
+TEAM_NAMES=(member1 member2 member3)
+TEAM_IDS=(yy223xx yy222xx yy222xx)
+
+echo "Customizing .gitlab-ci.yml ..."
+
+# Protect project name
+sed -i 's+yy223xx/+ProjectNameAutoReplaceByHook+g' .gitlab-ci.yml
+
+for n in ${TEAM_NAMES[@]}; do
+sed -i "s+$n+$NAME+g" .gitlab-ci.yml
+done
+
+for n in ${TEAM_IDS[@]}; do
+sed -i "s+$n+$ID+g" .gitlab-ci.yml
+done
+
+# Put back project name
+sed -i 's+ProjectNameAutoReplaceByHook+yy223xx/+g' .gitlab-ci.yml
+
+git add .gitlab-ci.yml
+
+echo "Customized .gitlab-ci.yml. Ready to commit."
+exit 0

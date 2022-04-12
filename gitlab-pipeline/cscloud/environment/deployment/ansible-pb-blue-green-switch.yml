@@ -1,0 +1,8 @@
+---
+- hosts: nfs
+  become: yes
+  become_user: root
+  become_method: sudo
+  roles:
+    - role: common
+    - role: blue_green_switch

@@ -1,0 +1,20 @@
+- name: Copy kubernetes template files
+  become: yes
+  become_user: ubuntu 
+  template: 
+    src: dokuwiki-blue-latest.yml.j2
+    dest: "$HOME/{{ dokuwiki_blue_dir }}/dokuwiki-blue-latest.yml"
+    force: yes
+
+- name: Updating blue env
+  become: yes
+  become_user: ubuntu
+  shell: 
+    chdir: "$HOME/{{ dokuwiki_blue_dir }}" 
+    cmd: |
+      kubectl config use-context blue
+      kubectl replace --force=true -f dokuwiki-blue-latest.yml
+
+- name: Wait 60 sec to make the pod spin up before testing
+  pause:
+    seconds: 60

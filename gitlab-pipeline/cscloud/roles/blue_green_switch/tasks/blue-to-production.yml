@@ -1,0 +1,121 @@
+# ---------------------------------------
+# Setup configuration files before switch
+# ---------------------------------------
+
+- name: Copy kubernetes template files
+  delegate_to: "{{ kube_master_ip_address }}"
+  become: yes
+  become_user: ubuntu 
+  template: 
+    src: dokuwiki-blue-latest.yml.j2
+    dest: "$HOME/{{ dokuwiki_blue_kube_dir }}/dokuwiki-blue-latest.yml"
+    force: yes
+
+- name: Copy production conf file to loadbalancer
+  delegate_to: "{{ lb_ip_address }}"
+  template:
+    src: blue-production-dokuwiki.xyz.conf.j2
+    dest: /etc/nginx/sites-available/{{ name }}-dokuwiki.xyz.conf
+
+- name: Copy staging conf conf file to loadbalancer
+  delegate_to: "{{ lb_ip_address }}"
+  template:
+    src: green-staging-dokuwiki.xyz.conf.j2
+    dest: /etc/nginx/sites-available/staging.{{ name }}-dokuwiki.xyz.conf
+
+- name: Create symbolic links between nginx sites-enabled and sites-available
+  delegate_to: "{{ lb_ip_address }}"
+  shell:
+    cmd: |
+      rm /etc/nginx/sites-enabled/staging.{{ name }}-dokuwiki.xyz.conf
+      rm /etc/nginx/sites-enabled/{{ name }}-dokuwiki.xyz.conf
+      ln -s /etc/nginx/sites-available/staging.{{ name }}-dokuwiki.xyz.conf /etc/nginx/sites-enabled/staging.{{ name }}-dokuwiki.xyz.conf
+      ln -s /etc/nginx/sites-available/{{ name }}-dokuwiki.xyz.conf /etc/nginx/sites-enabled/{{ name }}-dokuwiki.xyz.conf
+
+
+# -----------------------
+# Execute switching tasks
+# -----------------------
+
+- name: Reload nginx
+  delegate_to: "{{ lb_ip_address }}"
+  systemd:
+    name: nginx
+    state: reloaded
+
+- name: Remove and then Switch links for persistent data
+  shell:
+    cmd: |
+      rm -Rf {{ dokuwiki_green_nfs_dir }}/conf
+      rm -Rf {{ dokuwiki_green_nfs_dir }}/data
+      rm -Rf {{ dokuwiki_blue_nfs_dir }}/conf
+      rm -Rf {{ dokuwiki_blue_nfs_dir }}/data
+      ln -s {{ dokuwiki_production_dir }}/conf {{ dokuwiki_blue_nfs_dir }}/
+      ln -s {{ dokuwiki_production_dir }}/data {{ dokuwiki_blue_nfs_dir }}/
+      ln -s {{ dokuwiki_staging_dir }}/conf {{ dokuwiki_green_nfs_dir }}/
+      ln -s {{ dokuwiki_staging_dir }}/data {{ dokuwiki_green_nfs_dir }}/
+
+- name: Update production environment
+  delegate_to: "{{ kube_master_ip_address }}"
+  become: yes
+  become_user: ubuntu
+  shell: 
+    chdir: "$HOME/{{ dokuwiki_blue_kube_dir }}" 
+    cmd: |
+      kubectl config use-context blue
+      kubectl replace --force=true -f dokuwiki-blue-latest.yml
+
+- name: Replace staging environment
+  delegate_to: "{{ kube_master_ip_address }}"
+  become: yes
+  become_user: ubuntu
+  shell: 
+    chdir: "$HOME/{{ dokuwiki_green_kube_dir }}" 
+    cmd: |
+      kubectl config use-context green
+      kubectl replace --force=true -f dokuwiki-green.yml
+
+
+# -------------------------------------------
+# Change mode on persistent data after switch
+# -------------------------------------------
+
+- name: Change mode dir {{ dokuwiki_blue_nfs_dir }}
+  file:
+    path: "{{ dokuwiki_blue_nfs_dir }}"
+    mode: "{{ data_mode }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    recurse: yes
+    state: directory
+
+- name: Change mode dir {{ dokuwiki_production_dir }}
+  file:
+    path: "{{ dokuwiki_production_dir }}"
+    mode: "{{ data_mode }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    recurse: yes
+    state: directory
+
+- name: Change mode dir {{ dokuwiki_green_nfs_dir }}
+  file:
+    path: "{{ dokuwiki_green_nfs_dir }}"
+    mode: "{{ data_mode }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    recurse: yes
+    state: directory
+
+- name: Change mode dir {{ dokuwiki_staging_dir }}
+  file:
+    path: "{{ dokuwiki_staging_dir }}"
+    mode: "{{ data_mode }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    recurse: yes
+    state: directory
+
+- name: Wait 30 sec to make the pod spin up before testing
+  pause:
+    seconds: 30

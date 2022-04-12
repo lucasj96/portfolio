@@ -1,0 +1,42 @@
+- name: Installing nginx
+  apt:
+    name: nginx
+    state: present
+
+- name: Start nginx
+  service:
+    name: nginx
+    state: started
+
+- name: Copy conf files
+  template:
+    src: dokuwiki.xyz.conf.j2
+    dest: /etc/nginx/sites-available/{{ name }}-dokuwiki.xyz.conf
+
+- name: Copy staging conf files
+  template:
+    src: staging-dokuwiki.xyz.conf.j2
+    dest: /etc/nginx/sites-available/staging.{{ name }}-dokuwiki.xyz.conf
+
+- name: Create symbolic links
+  shell:
+    cmd: |
+      ln -s /etc/nginx/sites-available/staging.{{ name }}-dokuwiki.xyz.conf /etc/nginx/sites-enabled/staging.{{ name }}-dokuwiki.xyz.conf
+      ln -s /etc/nginx/sites-available/{{ name }}-dokuwiki.xyz.conf /etc/nginx/sites-enabled/{{ name }}-dokuwiki.xyz.conf
+
+- name: Remove default nginx.conf and sites-enabled/default
+  shell:
+    cmd: | 
+      rm /etc/nginx/nginx.conf
+      rm /etc/nginx/sites-enabled/default
+
+- name:  Copy new default
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+    mode: 0644
+
+- name: Restart nginx
+  systemd:
+    name: nginx
+    state: restarted

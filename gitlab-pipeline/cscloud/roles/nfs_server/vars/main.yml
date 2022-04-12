@@ -1,0 +1,8 @@
+dokuwiki_blue_nfs_dir: /dokuwiki_blue
+dokuwiki_green_nfs_dir: /dokuwiki_green
+dokuwiki_production_dir: /dokuwiki_production
+dokuwiki_staging_dir: /dokuwiki_staging
+conf_dir: conf
+data_dir: data
+data_owner: www-data
+data_mode: 0777

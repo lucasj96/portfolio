@@ -1,0 +1,54 @@
+- name: Add repo keys
+  apt_key:
+    url: "{{ item }}"
+    state: present
+  loop: "{{ keys_to_add }}"
+
+- name: Add repos
+  apt_repository:
+    repo: "{{ item }}"
+    state: present
+  loop: "{{ repos_to_add }}"
+
+- name: Installing "{{ packages_to_install }}" packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+  loop: "{{ packages_to_install }}"
+
+- name: Starting and enabling k8 services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop: "{{ service_names }}"
+
+- name: Pulling the images of k8s master
+  command: kubeadm config images pull
+
+# Update /etc/docker/daemon.json
+# Reading: https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker
+- name: Updating daemon.json to include insecure registries
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+  notify:
+    - Restart docker
+
+# Kubernetes swapoff
+# Reading: https://discuss.kubernetes.io/t/swap-off-why-is-it-necessary/6879/4
+- name: Turn swap off
+  shell:
+    cmd: |
+      swapoff -a
+      sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+- name: Rebbot
+  reboot:
+    reboot_timeout: 30
+
+- name: Pause
+  pause:
+    seconds: 30

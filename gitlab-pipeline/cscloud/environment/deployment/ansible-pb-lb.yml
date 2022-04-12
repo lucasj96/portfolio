@@ -1,0 +1,8 @@
+---
+- hosts: lb
+  become: yes
+  become_user: root
+  become_method: sudo
+  roles:
+    - role: common
+    - role: lb

@@ -1,0 +1,38 @@
+# ------------------
+# vault-server tasks
+# ------------------
+- name: Add repo keys
+  apt_key:
+    url: "{{ item }}"
+    state: present
+  loop: "{{ keys_to_add }}"
+
+- name: Add repos
+  apt_repository:
+    repo: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop: "{{ repos_to_add }}"
+
+- name: Installing "{{ packages_to_install }}" packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop: "{{ packages_to_install }}"
+
+# https://docs.gitlab.com/ee/ci/secrets/#configure-your-vault-server
+- name: Enable jwt authentication vault 
+  shell:
+    cmd: vault auth enable jwt   
+
+# https://docs.gitlab.com/ee/ci/secrets/#configure-your-vault-server
+- name: Enable jwt authentication vault 
+  shell: |
+    vault write auth/jwt/config \
+    jwks_url="https://gitlab.lnu.se/-/jwks" \
+    bound_issuer="gitlab.lnu.se"
+
+# https://docs.gitlab.com/ee/ci/secrets/#configure-vault-server-roles
+
+# sudo apt-get install jq

@@ -1,0 +1,53 @@
+deploy_staging:
+  tags:
+    - $SHELL_RUNNER
+  stage: staging
+  variables:
+    PRODUCTION_FILE: /home/gitlab-runner/dokuwiki/production_env.env
+  script:
+    - cd ${DEPLOYMENT_INFRA}
+    - chmod 700 update-blue-env.sh
+    - chmod 700 update-green-env.sh
+    - cp ${PRODUCTION_FILE} .
+    - >
+      if [ "$(cat production_env.env)" == "${BLUE_ENV}" ]; then
+        eval $(ssh-agent)
+        bash update-green-env.sh ${APP} ${VERSION} $(cat nfs_ip.env) ${BLUE_ENV} ${GREEN_ENV}
+      else
+        eval $(ssh-agent)
+        bash update-blue-env.sh ${APP} ${VERSION} $(cat nfs_ip.env) ${BLUE_ENV} ${GREEN_ENV}
+      fi
+  rules:
+    - if: '$FIRST_RELEASE == "false" && $ROLEBACK == "false"'
+      when: on_success
+
+test_staging:
+  stage: staging
+  tags:
+    - $SHELL_RUNNER
+  variables:
+    REPORT_FILE: api-staging-test-report.xml
+    TEST_FILE: 2dv611-CI-CD.postman_collection.json
+    #TEST_FILE: 2dv611-CI-CD-fake-failed-tests.postman_collection.json
+  script:
+    - cp ${TEST_DIR}/api/${TEST_FILE} ${DEPLOYMENT_INFRA}
+    - cd ${DEPLOYMENT_INFRA}
+    - >
+      newman run ${TEST_FILE}
+      --global-var "DOMAIN=${STAGING_DOMAIN}"
+      --global-var "APP_NAME=${APP_NAME}"
+      --global-var "VERSION=${VERSION}"
+      --reporters cli,junit
+      --reporter-junit-export ${REPORT_FILE}
+    - cp ${REPORT_FILE} ../../../${TEST_DIR}/api
+  needs:
+    - job: deploy_staging
+  artifacts:
+    when: always
+    paths: 
+      - ./${TEST_DIR}/api/${REPORT_FILE}
+    reports:
+      junit: ./${TEST_DIR}/api/${REPORT_FILE}
+  rules:
+    - if: '$FIRST_RELEASE == "false" && $ROLEBACK == "false"'
+      when: on_success

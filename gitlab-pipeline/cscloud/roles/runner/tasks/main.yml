@@ -1,0 +1,132 @@
+# Just for testing
+- name: Create group gitlab-runner
+  user:
+    name: "{{ gitlab_runner }}"
+    state: present
+
+- name: Create user gitlab-runner
+  user:
+    name: "{{ gitlab_runner }}"
+    group: "{{ gitlab_runner }}"
+
+# Directory used for metadata about the application
+- name: Create dir dokuwiki
+  file:
+    path: /home/{{ gitlab_runner }}/dokuwiki
+    group: "{{ gitlab_runner }}"
+    owner: "{{ gitlab_runner }}"
+    mode: 0755
+    recurse: yes
+    state: directory
+
+# Contain current production environment, "blue" or "green". Default value is "blue"
+- name:  Copy new default
+  copy:
+    src: production_env.env
+    dest: /home/{{ gitlab_runner }}/dokuwiki/production_env.env
+    group: "{{ gitlab_runner }}"
+    owner: "{{ gitlab_runner }}"
+    mode: 0644
+
+- name: Install dependencies
+  apt:
+    name:
+      - apt-transport-https 
+      - ca-certificates 
+      - curl 
+      - gnupg-agent 
+      - software-properties-common
+      - build-essential
+      - python3-pip
+    state: present
+    update-cache: yes
+
+- name: Update pip
+  pip:
+    name:
+      - pip
+    state: latest
+
+- name: Install pip dependencies
+  pip:
+    name: 
+    - python-gitlab #<=1.12.1 is this version needed
+    - virtualenv
+    - setuptools
+
+- name: Add "{{ gitlab_runner }}" user to docker group
+  user:
+    name: "{{ gitlab_runner }}"
+    append: yes
+    groups: docker
+
+- name: Install ansible
+  pip:
+    name:
+      - ansible
+
+# File /home/gitlab-runner/.bash_logout delete
+# File /home/ubuntu/.bash_logout delete
+# https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4559
+- name: Delete .bash_logout files on runner
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ bash_logout_files }}"
+
+- name: Copy security files to runners
+  copy:
+    src: "{{ item }}"
+    dest: /home/{{ gitlab_runner }}/.ssh/ 
+    group: "{{ gitlab_runner }}"
+    owner: "{{ gitlab_runner }}"
+    mode: 0400
+  loop: "{{ sec_files }}"
+
+# OBS! This task is not idempotent
+- name: Write env variable GITLAB_TOKEN to file
+  lineinfile:
+    path: /home/{{ gitlab_runner}}/.env
+    create: yes
+    backup: yes
+    line: "{{ gitlab_token }}"
+    insertafter: EOF
+    mode: 0400
+    group: "{{ gitlab_runner }}"
+    owner: "{{ gitlab_runner }}"
+    state: present
+
+- name: Install gitlab runner
+  shell: |
+    curl -LJO https://gitlab-runner-downloads.s3.amazonaws.com/latest/deb/gitlab-runner_amd64.deb; \
+    dpkg -i gitlab-runner_amd64.deb
+  args:
+    creates: /usr/bin/gitlab-runner
+
+# OBS! This task is not idempotent
+- name: Register gitlab docker runner
+  command: |
+    gitlab-runner register \
+    --non-interactive \
+    --url "{{ gitlab_domain }}" \
+    --registration-token "{{ reg_token }}" \
+    --executor "docker" \
+    --docker-image alpine:latest \
+    --description "{{ description_docker_runner }}" \
+    --tag-list "{{ tags_docker_runner }}" \
+    --run-untagged="false" \
+    --locked="true" \
+    --access-level="not_protected"
+
+- name: Register gitlab shell runner
+  command: |
+    gitlab-runner register \
+    --non-interactive \
+    --url "{{ gitlab_domain }}" \
+    --registration-token "{{ reg_token }}" \
+    --executor "shell" \
+    --description "{{ description_shell_runner }}" \
+    --tag-list "{{ tags_shell_runner }}" \
+    --run-untagged="false" \
+    --locked="true" \
+    --access-level="not_protected"

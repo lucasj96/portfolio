@@ -1,0 +1,15 @@
+<nav>
+  <span id="static-nav">
+    <a href="./">Home</a>
+  </span>
+  <span id="dynamic-nav">
+    {{#if loggedIn}}
+      <a href="./snippets/mysnippets">My snippets</a>
+      <a href="./snippets/create">Create snippet</a>
+      <a href="./logout">Logout</a>
+    {{else}}
+      <a href="./login">Login</a>
+      <a href="./register">Register</a>
+    {{/if}}
+  </span>
+</nav>

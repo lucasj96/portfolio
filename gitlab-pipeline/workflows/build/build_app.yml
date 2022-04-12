@@ -1,0 +1,23 @@
+build:
+  stage: build
+  variables:
+    username: $USERNAME
+    access_token: terraform.tfvars
+  tags:
+    - $SHELL_RUNNER
+  script:
+    - pwd
+    - sed -i "s/%%VERSION%%/${VERSION}/" dokuwiki/lib/tpl/dokuwiki/tpl_header.php
+    - tar -czf ${APP}.tar.gz $APP
+    - cp --force ${APP}.tar.gz $BUILD_ENV 
+    - cd $BUILD_ENV
+    - docker login -u ${USERNAME} -p $(cat /home/gitlab-runner/.env) ${CI_REGISTRY}
+    - docker build -t ${CI_REGISTRY}/${PROJECT}/${APP}_${VERSION}:${VERSION} .
+    - docker push --all-tags ${CI_REGISTRY}/${PROJECT}/${APP}_${VERSION}
+  artifacts:
+    when: always
+    paths:
+      - ./${BUILD_ENV}/${APP}.tar.gz
+  rules:
+    - if: '$ROLEBACK == "false"'
+      when: on_success

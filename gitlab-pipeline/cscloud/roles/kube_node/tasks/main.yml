@@ -1,0 +1,25 @@
+- name: Creating token for k8 Nodes
+  delegate_to: "{{ kube_master_ip_address }}"
+  command: kubeadm token create --print-join-command
+  register: token
+
+- name: Check kube services
+  become: yes
+  become_user: ubuntu
+  delegate_to: "{{ kube_master_ip_address }}"
+  shell: "kubectl get nodes"
+  ignore_errors: True
+  no_log: True
+  register: output
+
+- name: Copying token to worker nodes
+  copy:
+    content: "{{ token.stdout }}"
+    dest: join_token
+
+# Error when running multiple times.
+- name: Joining worker nodes with kubernetes master
+  shell:
+    cmd: |
+      cat join_token > out.sh
+      sh out.sh

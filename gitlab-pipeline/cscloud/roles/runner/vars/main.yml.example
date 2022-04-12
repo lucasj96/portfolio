@@ -1,0 +1,14 @@
+reg_token: <Gitlab_runner_token>
+gitlab_domain: https://gitlab.lnu.se/
+description_docker_runner: <your_name>-docker-runner
+description_shell_runner: <your_name>-shell-runner
+tags_shell_runner: <your_name> shell
+tags_docker_runner: <your_name> docker
+gitlab_runner: gitlab-runner
+sec_files:
+  - <path_to_cscloud_pem_file>
+  - <path_to_clouds.yaml_file> # Must contain password
+  - ../../../environment/terraform.tfvars
+bash_logout_files:
+  - /home/gitlab-runner/.bash_logout
+  - /home/ubuntu/.bash_logout

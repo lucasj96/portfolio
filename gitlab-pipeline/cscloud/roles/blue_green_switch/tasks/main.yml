@@ -1,0 +1,29 @@
+# TODO! 
+# 1. Configure NFS server correct 
+# 2. Test the switch
+# 3. Make backup of data
+# 4. Test roleback
+
+# ------------------------------
+# Chmod to 400 and create backup
+# ------------------------------
+- name: Backup application and user data data
+  include_tasks: backup.yml
+
+# -----------------------------------
+# Green to prodution, Blue to staging
+# -----------------------------------
+- name: Switch staging and production persistent data, green to production 
+  block:
+    - name: Switch staging and production persistent data, green to production, tasks
+      include_tasks: green-to-production.yml
+  when: production_env == 'blue'
+
+# -----------------------------------
+# Blue to prodution, Green to staging
+# -----------------------------------
+- name: Switch staging and production persistent data, blue to prodution
+  block:
+    - name: Switch staging and production persistent data, blue to production, tasks
+      include_tasks: blue-to-production.yml
+  when: production_env == 'green'

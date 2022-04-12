@@ -1,0 +1,19 @@
+<div id="index">
+  <h3>Index</h3>
+  {{#each issues}}
+  <div id="issue-{{iid}}" class="issue">
+    ID: <span id="issue-{{iid}}-id">{{id}}</span>,
+    IID: <span id="issue-{{iid}}-iid">{{iid}}</span>,
+    Title: <span id="issue-{{iid}}-title">{{title}}</span>,
+    State: <span id="issue-{{iid}}-state">{{state}}</span>
+    <br>
+     <img src={{author.avatar_url}} class="avatar">
+     Author: {{author.name}}
+    <br>
+    Description: {{description}}
+    <br>
+    <button custom-iid="{{iid}}" id="open{{id}}" class="btn btn-primary btn-sm openbutton">Open</button>
+    <button custom-iid="{{iid}}" id="close{{id}}" class="btn btn-primary btn-sm closebutton">Close</button>
+  </div>
+  {{/each}}
+</div>

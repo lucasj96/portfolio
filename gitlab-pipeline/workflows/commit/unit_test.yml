@@ -1,0 +1,17 @@
+unit_test:
+  stage: commit
+  image: ${CI_REGISTRY}/${PROJECT}/${NAME_UNIT_TEST_IMAGE}:latest
+  tags:
+    - $DOCKER_RUNNER
+  script:
+    - cd dokuwiki/_test
+    - phpunit --log-junit report.xml
+  artifacts:
+    when: always
+    paths: 
+      - ./dokuwiki/_test/report.xml
+    reports:
+      junit: ./dokuwiki/_test/report.xml
+  rules:
+    - if: '$ROLEBACK == "false"'
+      when: always

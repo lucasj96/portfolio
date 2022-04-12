@@ -1,0 +1,143 @@
+# ----------------------------------------------------
+# Setup staging and production persistent data folders
+# ----------------------------------------------------
+- name: Creating mountable shared folder for blue env
+  file:
+    path: "{{ dokuwiki_blue_nfs_dir }}"
+    group: www-data
+    owner: www-data
+    mode: 0777
+    recurse: yes
+    state: directory
+
+- name: Creating mountable shared folder for green env
+  file:
+    path: "{{ dokuwiki_green_nfs_dir }}"
+    group: www-data
+    owner: www-data
+    mode: 0777
+    recurse: yes
+    state: directory
+
+- name: Creating link folder for production {{ data_dir }}
+  file:
+    path: "{{ dokuwiki_production_dir }}"
+    group: "{{ data_owner }}"
+    owner: "{{ data_owner }}"
+    mode: "{{ data_mode }}"
+    recurse: yes
+    state: directory
+
+- name: Creating link folder for staging {{ data_dir }}
+  file:
+    path: "{{ dokuwiki_staging_dir }}"
+    group: "{{ data_owner }}"
+    owner: "{{ data_owner }}"
+    mode: "{{ data_mode }}"
+    recurse: yes
+    state: directory
+
+- name: Copy and unzip dokuwiki {{ data_dir }} to dir {{ dokuwiki_production_dir }}
+  unarchive:
+    dest: "{{ dokuwiki_production_dir }}"
+    src: data.tar.gz
+    group: "{{ data_owner }}"
+    owner: "{{ data_owner }}"
+    mode: "{{ data_mode }}"
+
+- name: Copy and unzip dokuwiki {{ data_dir }} to dir {{ dokuwiki_staging_dir }}
+  unarchive:
+    dest: "{{ dokuwiki_staging_dir }}"
+    src: data.tar.gz
+    group: "{{ data_owner }}"
+    owner: "{{ data_owner }}"
+    mode: "{{ data_mode }}"
+
+- name: Copy and unzip dokuwiki {{ conf_dir }} dir {{ dokuwiki_production_dir }}
+  unarchive:
+    dest: "{{ dokuwiki_production_dir }}"
+    src: conf.tar.gz
+    group: "{{ data_owner }}"
+    owner: "{{ data_owner }}"
+    mode: "{{ data_mode }}"
+
+- name: Copy and unzip dokuwiki {{ conf_dir }} to dir {{ dokuwiki_staging_dir }}
+  unarchive:
+    dest: "{{ dokuwiki_staging_dir }}"
+    src: conf.tar.gz
+    group: "{{ data_owner }}"
+    owner: "{{ data_owner }}"
+    mode: "{{ data_mode }}"
+
+# ----------------------------------------------------
+# Link blue to production and green to staging folders 
+# ----------------------------------------------------
+- name: Link folders
+  shell:
+    cmd: |
+      ln -s {{ dokuwiki_production_dir }}/{{ conf_dir }} {{ dokuwiki_blue_nfs_dir }}/{{ conf_dir }}
+      ln -s {{ dokuwiki_production_dir }}/{{ data_dir }} {{ dokuwiki_blue_nfs_dir }}/{{ data_dir }}
+      ln -s {{ dokuwiki_staging_dir }}/{{ conf_dir }} {{ dokuwiki_green_nfs_dir }}/{{ conf_dir }}
+      ln -s {{ dokuwiki_staging_dir }}/{{ data_dir }} {{ dokuwiki_green_nfs_dir }}/{{ data_dir }}
+
+# ---------------------------
+# NFS installation and {{ conf_dir }}ig
+# ---------------------------
+- name: Install nfs package
+  apt:
+    name: nfs-kernel-server
+    update_cache: yes
+    cache_valid_time: 3600
+    state: present
+
+- name: Starting nfs server
+  systemd:
+    name: nfs-server
+    state: started
+    enabled: yes
+
+- name: Configure nfs server
+  template:
+    src: export_file.j2
+    dest: /etc/exports
+  notify:
+    - Restart nfs
+
+# -------------------------------
+# Change mode on folders recursive
+# -------------------------------
+- name: Change mode dir {{ dokuwiki_blue_nfs_dir }}
+  file:
+    path: "{{ dokuwiki_blue_nfs_dir }}"
+    mode: "{{ data_mode }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    recurse: yes
+    state: directory
+
+- name: Change mode dir {{ dokuwiki_green_nfs_dir }}
+  file:
+    path: "{{ dokuwiki_green_nfs_dir }}"
+    mode: "{{ data_mode }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    recurse: yes
+    state: directory
+
+- name: Change mode dir {{ dokuwiki_production_dir }}
+  file:
+    path: "{{ dokuwiki_production_dir }}"
+    mode: "{{ data_mode }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    recurse: yes
+    state: directory
+
+- name: Change mode dir {{ dokuwiki_staging_dir }}
+  file:
+    path: "{{ dokuwiki_staging_dir }}"
+    mode: "{{ data_mode }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    recurse: yes
+    state: directory

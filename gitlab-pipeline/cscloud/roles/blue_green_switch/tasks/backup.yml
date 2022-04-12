@@ -1,0 +1,70 @@
+# --------------------------------------------
+# Change mode on persistent data before switch
+# --------------------------------------------
+
+- name: Remove old staging data
+  shell:
+    cmd: |
+      rm -Rf {{ dokuwiki_staging_dir }}/conf
+      rm -Rf {{ dokuwiki_staging_dir }}/data
+
+- name: Change mode dir {{ dokuwiki_blue_nfs_dir }}
+  file:
+    path: "{{ dokuwiki_blue_nfs_dir }}"
+    mode: "{{ switch_data_mode }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    recurse: yes
+    state: directory
+
+- name: Change mode dir {{ dokuwiki_green_nfs_dir }}
+  file:
+    path: "{{ dokuwiki_green_nfs_dir }}"
+    mode: "{{ switch_data_mode }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    recurse: yes
+    state: directory
+
+- name: Change mode dir {{ dokuwiki_production_dir }}
+  file:
+    path: "{{ dokuwiki_production_dir }}"
+    mode: "{{ switch_data_mode }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    recurse: yes
+    state: directory
+
+
+
+# --------------------------------------------------------------------------
+# Backup production data and store it in staging folder and in backup folder
+# --------------------------------------------------------------------------
+
+- name: Backup production data to backup folder
+  copy:
+    remote_src: yes
+    src: "{{ dokuwiki_production_dir }}"
+    dest: "{{ dokuwiki_production_dir_backup }}_{{ app_version }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    mode: preserve
+
+- name: Copy production app data to staging data
+  copy:
+    remote_src: yes
+    src: "{{ dokuwiki_production_dir }}/data"
+    dest: "{{ dokuwiki_staging_dir }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    mode: preserve
+
+- name: Copy production user data to staging data
+  copy:
+    remote_src: yes
+    src: "{{ dokuwiki_production_dir }}/conf"
+    dest: "{{ dokuwiki_staging_dir }}"
+    owner: "{{ data_owner }}"
+    group: "{{ data_owner }}"
+    mode: preserve
+

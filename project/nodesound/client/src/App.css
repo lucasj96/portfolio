@@ -1,0 +1,24 @@
+.App {
+  text-align: center;
+  height: 100vh;
+}
+
+.container-fluid {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+}
+
+html, body, #root, .container {
+  height: 100%
+}
+
+[data-reactroot] {
+  height: 100% !important;
+}

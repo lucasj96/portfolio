@@ -1,0 +1,43 @@
+#wrapper {
+  margin: auto;
+  max-width: 600px;
+}
+
+footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  max-width: 600px;
+  height: 60px;
+  line-height: 60px;
+  background-color: #f5f5f5;
+}
+
+#dynamic-nav > a {
+  margin-right: 5px;
+}
+
+nav {
+  float: left;
+  width: 100%;
+}
+
+#dynamic-nav {
+  float: right;
+  margin-right: 20px;
+}
+
+#static-nav {
+  float: left;
+}
+
+#main {
+  float: left;
+  width: 100%;
+}
+
+#code {
+  background-color: #e1edff;
+  min-height: 500px;
+  padding: 10px;
+}

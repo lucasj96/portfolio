@@ -1,0 +1,129 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ app }}-svc
+  labels:
+    app: {{ app }}
+spec:
+  type: NodePort
+  selector:
+    app: {{ app }}
+    tier: frontend
+  ports:
+  - protocol: TCP
+    port: 80
+    nodePort: 31112
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ app }}-deploy
+  labels:
+    app: {{ app }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ app }}
+      tier: frontend
+  strategy:
+    type: Recreate
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: {{ app }}
+        tier: frontend
+    spec:
+      containers:
+      - image: gitlab.lnu.se:5050/sp222xw/2dv611group2/{{ app }}_{{ app_version }}:{{ app_version }}
+        name: {{ app }}
+        ports:
+        - containerPort: 80
+          name: {{ app }}
+        volumeMounts:
+        - name: {{ app }}-persistent-storage-data
+          mountPath: /var/www/{{ app }}/data
+        - name: {{ app }}-persistent-storage-config
+          mountPath: /var/www/{{ app }}/conf
+      volumes:
+      - name: {{ app }}-persistent-storage-data
+        persistentVolumeClaim:
+          claimName: {{ app }}-green-data-pvc
+      - name: {{ app }}-persistent-storage-config
+        persistentVolumeClaim:
+          claimName: {{ app }}-green-config-pvc
+      imagePullSecrets:
+      - name: regcred
+      nodeSelector:
+        env: green
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ app }}-green-data-pv
+  labels:
+    storage: {{ app }}-green-storage-data
+spec:
+  claimRef:
+    name: {{ app }}-green-data-pvc
+    namespace: green
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    path: {{ dokuwiki_green_nfs_dir }}/data
+    server: {{ nfs_ip_address }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ app }}-green-data-pvc
+  labels:
+    app: {{ app }}
+spec:
+  selector:
+    matchLabels:
+      storage: {{ app }}-green-storage-data
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ app }}-green-config-pv
+  labels:
+    storage: {{ app }}-green-config-storage
+spec:
+  claimRef:
+    name: {{ app }}-green-config-pvc
+    namespace: green
+  capacity:
+    storage: 4Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    path: /dokuwiki_green/conf
+    server: {{ nfs_ip_address }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ app }}-green-config-pvc
+  labels:
+    app: {{ app }}
+spec:
+  selector:
+    matchLabels:
+      storage: {{ app }}-green-config-storage
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi

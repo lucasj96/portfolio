@@ -1,0 +1,15 @@
+<h4><strong>Title</strong>: {{title}}</h4>
+
+<h4>Code</h4>
+<div id="code">
+  <div class="form-group">
+  <pre>{{{code}}}</pre>
+  </div>
+</div>
+
+{{#if owner}}
+  <a href="./snippets/edit/{{_id}}"><button class="btn btn-primary">Edit</button></a>
+  <a href="./snippets/delete/{{_id}}"><button class="btn btn-primary">Delete</button></a>
+{{/if}}
+
+

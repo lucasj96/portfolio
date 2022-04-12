@@ -1,0 +1,11 @@
+upstream backend {
+        server {{ green_app_ip_address }}:31112;
+}
+server {
+        listen 80;
+        listen [::]:80;
+        server_name {{ name }}-dokuwiki.xyz;
+        location / {
+                proxy_pass http://backend;
+        }
+}

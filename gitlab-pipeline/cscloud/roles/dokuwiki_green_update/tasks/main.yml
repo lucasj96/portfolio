@@ -1,0 +1,20 @@
+- name: Copy kubernetes template files
+  become: yes
+  become_user: ubuntu 
+  template: 
+    src: dokuwiki-green-latest.yml.j2
+    dest: "$HOME/{{ dokuwiki_green_dir }}/dokuwiki-green-latest.yml"
+    force: yes
+
+- name: Deploying green env
+  become: yes
+  become_user: ubuntu
+  shell: 
+    chdir: "$HOME/{{ dokuwiki_green_dir }}" 
+    cmd: |
+      kubectl config use-context green
+      kubectl replace --force=true -f dokuwiki-green-latest.yml
+
+- name: Wait 60 sec to make the pod spin up before testing
+  pause:
+    seconds: 60

@@ -1,0 +1,48 @@
+
+update_infra:
+  tags:
+    - $SHELL_RUNNER
+  stage: pre_staging
+  script:
+    - echo "Deploying application..."
+    - cd $DEPLOYMENT_INFRA
+    - cp ~/.ssh/clouds.yaml .
+    - cp ~/.ssh/terraform.tfvars ../
+    - export TF_LOG=DEBUG
+    - eval $(ssh-agent)
+    - >
+      terraform init -backend-config="address=https://gitlab.lnu.se/api/v4/projects/${CI_PROJECT_ID}/terraform/state/${USERNAME}-deployment-state"
+      -backend-config="lock_address=https://gitlab.lnu.se/api/v4/projects/${CI_PROJECT_ID}/terraform/state/${USERNAME}-deployment-state/lock"
+      -backend-config="unlock_address=https://gitlab.lnu.se/api/v4/projects/${CI_PROJECT_ID}/terraform/state/${USERNAME}-deployment-state/lock"
+      -backend-config="username=${USERNAME}"
+      -backend-config="password=$(cat /home/gitlab-runner/.env)"
+      -backend-config="lock_method=POST"
+      -backend-config="unlock_method=DELETE"
+      -backend-config="retry_wait_min=5"
+    - >
+      terraform apply -parallelism=1 -auto-approve 
+      -var="app=${APP}"
+      -var="app_version=${VERSION}"
+      -var="ci_registry=${CI_REGISTRY}"
+      -var="username=${USERNAME}"
+      -var="name=${NAME}"
+      -var="access_token=$(cat /home/gitlab-runner/.env)"
+      -var-file="./../terraform.tfvars"
+    - echo "$(terraform output -raw blue_ip)" > blue_ip_build.env
+    - echo "$(terraform output -raw green_ip)" > green_ip_build.env
+    - echo "$(terraform output -raw nfs_ip)" > nfs_ip.env
+    - echo "$(terraform output -raw lb_ip)" > lb_ip.env
+    - echo "$(terraform output -raw lb_private_ip)" > lb_private_ip.env
+    - echo "$(terraform output -raw kube_master_ip)" > kube_master_ip.env
+    - echo "Application successfully deployed."
+  artifacts:
+    when: always
+    paths: 
+      - ./${DEPLOYMENT_INFRA}/blue_ip_build.env
+      - ./${DEPLOYMENT_INFRA}/green_ip_build.env
+      - ./${DEPLOYMENT_INFRA}/ansible.cfg
+      - ./${DEPLOYMENT_INFRA}/inventory
+      - ./${DEPLOYMENT_INFRA}/nfs_ip.env
+      - ./${DEPLOYMENT_INFRA}/lb_ip.env
+      - ./${DEPLOYMENT_INFRA}/lb_private_ip.env
+      - ./${DEPLOYMENT_INFRA}/kube_master_ip.env

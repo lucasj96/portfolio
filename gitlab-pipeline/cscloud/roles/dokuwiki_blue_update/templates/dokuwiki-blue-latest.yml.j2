@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ app }}-deploy
+  labels:
+    app: {{ app }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ app }}
+      tier: frontend
+  strategy:
+    type: Recreate
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: {{ app }}
+        tier: frontend
+    spec:
+      containers:
+      - image: gitlab.lnu.se:5050/sp222xw/2dv611group2/{{ app }}_{{ app_version }}:{{ app_version }}
+        name: {{ app }}
+        ports:
+        - containerPort: 80
+          name: {{ app }}
+        volumeMounts:
+        - name: {{ app }}-persistent-storage-data
+          mountPath: /var/www/{{ app }}/data
+        - name: {{ app }}-persistent-storage-config
+          mountPath: /var/www/{{ app }}/conf
+      volumes:
+      - name: {{ app }}-persistent-storage-data
+        persistentVolumeClaim:
+          claimName: {{ app }}-blue-data-pvc
+      - name: {{ app }}-persistent-storage-config
+        persistentVolumeClaim:
+          claimName: {{ app }}-blue-config-pvc
+      imagePullSecrets:
+      - name: regcred
+      nodeSelector:
+        env: blue

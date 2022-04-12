@@ -1,0 +1,25 @@
+destroy_deployment:
+  tags:
+    - $SHELL_RUNNER
+  stage: destroy
+  script:
+    - echo "Destroying application..."
+    - echo "" > /home/gitlab-runner/.ssh/known_hosts
+    - cd ${DEPLOYMENT_INFRA}
+    - cp ~/.ssh/clouds.yaml .
+    - cp ~/.ssh/terraform.tfvars ../
+    - export TF_LOG=DEBUG
+    - >
+      terraform init -backend-config="address=https://gitlab.lnu.se/api/v4/projects/${CI_PROJECT_ID}/terraform/state/${USERNAME}-deployment-state" 
+      -backend-config="lock_address=https://gitlab.lnu.se/api/v4/projects/${CI_PROJECT_ID}/terraform/state/${USERNAME}-deployment-state/lock" 
+      -backend-config="unlock_address=https://gitlab.lnu.se/api/v4/projects/${CI_PROJECT_ID}/terraform/state/${USERNAME}-deployment-state/lock" 
+      -backend-config="username=${USERNAME}" 
+      -backend-config="password=$(cat /home/gitlab-runner/.env)" 
+      -backend-config="lock_method=POST" 
+      -backend-config="unlock_method=DELETE" 
+      -backend-config="retry_wait_min=5"
+    - terraform destroy -auto-approve -var-file="./../terraform.tfvars"
+    - echo "Application successfully destroyed."  
+  rules:
+    - if: '$FIRST_RELEASE == "true"'
+      when: always

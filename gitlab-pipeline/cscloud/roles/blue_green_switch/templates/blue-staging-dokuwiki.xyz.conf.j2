@@ -1,0 +1,11 @@
+upstream staging_backend {
+        server {{ blue_app_ip_address }}:31111;
+}
+server {
+        listen 80;
+        listen [::]:80;
+        server_name staging.{{ name }}-dokuwiki.xyz;
+        location / {
+                proxy_pass http://staging_backend;
+        }
+}

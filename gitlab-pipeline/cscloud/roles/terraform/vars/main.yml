@@ -1,0 +1,6 @@
+keys_to_add:
+  - https://apt.releases.hashicorp.com/gpg
+repos_to_add:
+  - "deb [arch=amd64] https://apt.releases.hashicorp.com focal main"
+packages_to_install: 
+  - terraform

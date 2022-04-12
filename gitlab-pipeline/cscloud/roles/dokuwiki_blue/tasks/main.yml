@@ -1,0 +1,40 @@
+- name: Copying dokuwiki files
+  become: yes
+  become_user: ubuntu 
+  copy: 
+    src: "{{ dokuwiki_blue_dir }}"
+    dest: "$HOME"
+    force: yes
+
+- name: Copy kubernetes template files
+  become: yes
+  become_user: ubuntu 
+  template: 
+    src: dokuwiki-blue.yml.j2
+    dest: "$HOME/{{ dokuwiki_blue_dir }}/dokuwiki-blue.yml"
+
+# Missing file .docker: https://stackoverflow.com/questions/52489890/missing-docker-folder-on-ubuntu
+# Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ 
+- name: Create secret in blue context
+  become: yes
+  become_user: ubuntu
+  shell:
+    cmd: |
+      docker login -u {{ username }} -p {{ access_token }} {{ ci_registry }} 
+      kubectl config use-context blue
+      kubectl create secret generic regcred --from-file=.dockerconfigjson=/home/ubuntu/.docker/config.json --type=kubernetes.io/dockerconfigjson
+
+- name: Deploying blue env
+  become: yes
+  become_user: ubuntu
+  shell: 
+    chdir: "$HOME/{{ dokuwiki_blue_dir }}" 
+    cmd: |
+      kubectl label nodes blue-app --overwrite env=blue
+      kubectl config use-context blue
+      kubectl apply -f dokuwiki-blue.yml
+
+- name: Wait 60 sec to make the pod spin up before install admin
+  pause:
+    seconds: 60
+

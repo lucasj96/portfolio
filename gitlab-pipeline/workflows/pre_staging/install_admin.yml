@@ -1,0 +1,46 @@
+
+install_admin_blue:
+  stage: pre_staging
+  environment:
+    name: production
+    url: http://${PRODUCTION_DOMAIN}
+  tags:
+    - $SHELL_RUNNER
+  script:
+    - cd $DEPLOYMENT_INFRA
+    - chmod 700 install-admin.sh
+    - >
+      bash install-admin.sh
+      ${PRODUCTION_DOMAIN}
+      $dokuwiki_password 
+      $NAME 
+      $EMAIL 
+      $APP_NAME
+  needs:
+    - job: update_infra
+  rules:
+    - if: '$FIRST_RELEASE == "true"'
+      when: always
+
+install_admin_green:
+  stage: pre_staging
+  environment:
+    name: staging
+    url: http://${STAGING_DOMAIN}
+  tags:
+    - $SHELL_RUNNER
+  script:
+    - cd $DEPLOYMENT_INFRA
+    - chmod 700 install-admin.sh
+    - > 
+      bash install-admin.sh 
+      ${STAGING_DOMAIN}
+      $dokuwiki_password 
+      $NAME 
+      $EMAIL 
+      $APP_NAME
+  needs:
+    - job: update_infra
+  rules:
+    - if: '$FIRST_RELEASE == "true"'
+      when: always

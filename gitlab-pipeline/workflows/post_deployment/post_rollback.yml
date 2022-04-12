@@ -1,0 +1,23 @@
+post_rollback_success:
+  stage: cleanup
+  tags:
+    - $SHELL_RUNNER
+  script:
+    - docker login -u ${USERNAME} -p $(cat /home/gitlab-runner/.env) ${CI_REGISTRY}
+    - docker tag "${CI_REGISTRY}/${PROJECT}/${APP}_${ROLEBACK_VERSION}:${ROLEBACK_VERSION}" "${CI_REGISTRY}/${PROJECT}/${APP}_${ROLEBACK_VERSION}:success"
+    - docker push --all-tags ${CI_REGISTRY}/${PROJECT}/${APP}_${ROLEBACK_VERSION}
+  rules:
+    - if: '$FIRST_RELEASE == "false" && $ROLEBACK == "true"'
+      when: on_success
+
+post_rollback_failure:
+  stage: cleanup
+  tags:
+    - $SHELL_RUNNER
+  script:
+    - docker login -u ${USERNAME} -p $(cat /home/gitlab-runner/.env) ${CI_REGISTRY}
+    - docker tag "${CI_REGISTRY}/${PROJECT}/${APP}_${ROLEBACK_VERSION}:${ROLEBACK_VERSION}" "${CI_REGISTRY}/${PROJECT}/${APP}_${ROLEBACK_VERSION}:error"
+    - docker push --all-tags ${CI_REGISTRY}/${PROJECT}/${APP}_${ROLEBACK_VERSION}
+  rules:
+    - if: '$FIRST_RELEASE == "false" && $ROLEBACK == "true"'
+      when: on_failure

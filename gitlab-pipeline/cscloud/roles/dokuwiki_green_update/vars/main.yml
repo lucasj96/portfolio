@@ -1,0 +1,4 @@
+dokuwiki_green_nfs_dir: /dokuwiki_green
+dokuwiki_green_dir: dokuwiki_green
+app: "{{ app }}"
+app_version: "{{ app_version }}"

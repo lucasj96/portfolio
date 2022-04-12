@@ -1,0 +1,44 @@
+# See ansible docker community
+# Containers: https://docs.ansible.com/ansible/latest/collections/community/docker/docker_container_module.html#ansible-collections-community-docker-docker-container-module 
+# Images: https://docs.ansible.com/ansible/latest/collections/community/docker/docker_image_module.html
+# Must install from ansible-galaxy.
+
+# OBS! At moment rememeber to destroy infra manually at OpenStack before
+# pushing to pipeline.
+
+
+# - name: Start application
+#   block:
+#     - name: Copy docker directory to remote
+#       copy: 
+#         src: "{{ doku_wiki_dir }}"
+#         dest: "$HOME"
+
+#     - name: Build docker image
+#       shell:
+#         chdir: "{{ doku_wiki_dir }}"
+#         cmd: docker build -t {{ app_name }}:{{ app_version }} .
+
+#     - name: Create and start docker container
+#       shell:
+#         cmd: docker run -d -p 80:80 --name "{{ app_name }}_{{ app_version }}" {{ app_name }}:{{ app_version }}
+#   become: yes
+#   become_user: ubuntu
+#   ignore_errors: yes
+
+# - name: Build docker image
+#   community.docker.docker_image:
+#     name: "{{ app_name }}:{{ app_version }}"
+#     build:
+#       path: "$HOME/{{ doku_wiki_dir }}"
+#     source: build
+#     state: present
+
+# - name: Create and start docker container
+#   community.docker.docker_container:
+#     name: "{{ app_name }}_{{ app_version }}"
+#     image: "{{ app_name }}:{{ app_version }}"
+#     ports:
+#       - "80:80"
+#     state: started
+    

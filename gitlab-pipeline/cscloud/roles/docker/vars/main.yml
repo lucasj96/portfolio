@@ -1,0 +1,10 @@
+service_names:
+  - "docker"
+keys_to_add:
+  - https://download.docker.com/linux/ubuntu/gpg
+repos_to_add:
+  - deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+packages_to_install:
+  - docker-ce
+  - docker-ce-cli 
+  - containerd.io

@@ -1,0 +1,15 @@
+<h3>Edit snippet</h3>
+
+<h4><strong>Title</strong>: {{title}}</h4>
+
+<form action="./snippets/edit/{{_id}}" method="POST">
+  <div class="form-group">
+    <label for="inputTitle">New title</label>
+    <input type="text" class="form-control" placeholder="Enter title" name="title" id="inputTitle" value="{{title}}"/>
+  </div>
+  <div class="form-group">
+    <label for="inputSnippet">Snippet code</label>
+    <textarea placeholder="Enter updated code" name="textcontent" class="form-control" id="inputSnippet" rows="25" cols="20">{{textcontent}}</textarea>
+  </div>
+  <button class="btn btn-primary">Update</button>
+</form>

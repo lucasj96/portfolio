@@ -1,0 +1,29 @@
+# Install module first:
+# $ (sudo) ansible-galaxy collection install community.general
+# https://docs.ansible.com/ansible/latest/collections/community/general/npm_module.html
+
+- name: Add nodejs repo
+  shell:
+    cmd: curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+
+- name: Installing nodejs
+  apt:
+    name: nodejs
+    state: present
+    update_cache: yes
+
+- name: Install newman npm package
+  community.general.npm:
+    name: newman
+    global: yes
+    state: present
+
+- name: Copying test folder
+  copy:
+    src: test
+    dest: /home/{{ user }}/api_test/
+    force: yes
+    group: "{{ user }}"
+    owner: "{{ user }}"
+    mode: 0644
+    directory_mode:
